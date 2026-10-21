@@ -201,45 +201,94 @@ user = get_verified_user()
 # -------------------
 # SIGN-IN PAGE
 # -------------------
+
 if user is None:
+    auth_mode = st.radio(
+        "Account",
+        ["Sign In", "Sign Up"],
+        horizontal=True
+    )
 
-    st.subheader("Sign In")
+    if auth_mode == "Sign In":
+        st.subheader("Sign In")
 
-    with st.form("login_form"):
-        email = st.text_input("Email")
-        password = st.text_input(
-            "Password",
-            type="password"
-        )
+        with st.form("login_form"):
+            email = st.text_input("Email")
+            password = st.text_input(
+                "Password",
+                type="password"
+            )
+            submitted = st.form_submit_button("Sign In")
 
-        submitted = st.form_submit_button("Sign In")
-
-    if submitted:
-        try:
-            response = (
-                st.session_state.auth_client.auth
-                .sign_in_with_password({
-                    "email": email,
+        if submitted:
+            try:
+                response = st.session_state.auth_client.auth.sign_in_with_password({
+                    "email": email.strip(),
                     "password": password
                 })
+
+                if response.session:
+                    st.session_state.access_token = response.session.access_token
+                    st.session_state.refresh_token = response.session.refresh_token
+                    st.rerun()
+                else:
+                    st.error("Login failed.")
+
+            except Exception:
+                st.error("Invalid credentials or login error.")
+
+    else:
+        st.subheader("Create an Account")
+
+        with st.form("signup_form"):
+            email = st.text_input("Email")
+            password = st.text_input(
+                "Password",
+                type="password"
+            )
+            confirm_password = st.text_input(
+                "Confirm Password",
+                type="password"
             )
 
-            if response.session:
-                st.session_state.access_token = (
-                    response.session.access_token
-                )
-                st.session_state.refresh_token = (
-                    response.session.refresh_token
-                )
+            submitted = st.form_submit_button("Sign Up")
 
-                st.rerun()
+        if submitted:
+            if not email.strip() or not password:
+                st.warning("Please enter an email and password.")
+
+            elif password != confirm_password:
+                st.error("Passwords do not match.")
+
+            elif len(password) < 6:
+                st.error("Password must contain at least 6 characters.")
+
             else:
-                st.error("Login failed.")
+                try:
+                    response = st.session_state.auth_client.auth.sign_up({
+                        "email": email.strip(),
+                        "password": password
+                    })
 
-        except Exception:
-            st.error("Invalid credentials or login error.")
+                    if response.session:
+                        st.session_state.access_token = response.session.access_token
+                        st.session_state.refresh_token = response.session.refresh_token
+                        st.rerun()
+                    else:
+                        st.success(
+                            "Registration submitted. "
+                            "Please check your email for a confirmation link "
+                            "if email verification is enabled, then sign in."
+                        )
+
+                except Exception:
+                    st.error(
+                        "Registration could not be completed. "
+                        "Please check your information or try again later."
+                    )
 
     st.stop()
+
 
 
 # -------------------

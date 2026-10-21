@@ -19,6 +19,7 @@ Replace the quiz website URL above with the actual Streamlit Community Cloud dep
 - Save and reload student SQL answers
 - Restricted database roles for query execution and answer storage
 - GitHub Actions for automated database connection testing
+- Student self-registration with Supabase Auth
 
 ## Technology Stack
 
